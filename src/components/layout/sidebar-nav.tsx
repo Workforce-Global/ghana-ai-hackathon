@@ -16,9 +16,11 @@ export function SidebarNav() {
 
   return (
     <Sidebar collapsible="icon" className="hidden md:flex">
-      <SidebarHeader className="h-16 flex items-center justify-center gap-2">
-         <Bot className="w-8 h-8 text-primary" />
-         <span className="text-xl font-bold group-data-[collapsible=icon]:hidden">AgroSaviour</span>
+      <SidebarHeader>
+        <Link href="/" className="flex items-center gap-2">
+           <Bot className="w-8 h-8 text-primary" />
+           <span className="text-xl font-bold group-data-[collapsible=icon]:hidden">AgroSaviour</span>
+        </Link>
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
@@ -30,7 +32,7 @@ export function SidebarNav() {
                   tooltip={{ children: item.label }}
                 >
                   <item.icon className="h-5 w-5" />
-                  <span>{item.label}</span>
+                  <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
