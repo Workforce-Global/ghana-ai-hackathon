@@ -14,6 +14,10 @@ import { useToast } from '@/hooks/use-toast';
 import { analyzeCropImage, AnalyzeCropImageOutput } from '@/ai/flows/analyze-crop-image';
 import { getPersonalizedAdvice } from '@/ai/flows/personalized-agricultural-advice';
 import { UploadCloud, Bot, Lightbulb, AlertTriangle, CheckCircle, Leaf } from 'lucide-react';
+import { useAuth } from '@/context/auth-provider';
+import { storage } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
 
 type Scan = {
   id: string;
@@ -23,6 +27,7 @@ type Scan = {
   status: string;
   image: string;
   data_ai_hint: string;
+  recommendedActions: string[];
 };
 
 export function ImageUploader() {
@@ -32,11 +37,12 @@ export function ImageUploader() {
   const [analysisResult, setAnalysisResult] = useState<AnalyzeCropImageOutput | null>(null);
   const [advice, setAdvice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
   
   const { register, handleSubmit, setValue, watch } = useForm<{ image: FileList }>();
   const imageFile = watch('image');
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLHTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setPreview(URL.createObjectURL(file));
@@ -53,6 +59,11 @@ export function ImageUploader() {
       setError("Please select an image file.");
       return;
     }
+    if (!user) {
+      setError("You must be logged in to analyze an image.");
+      toast({ variant: "destructive", title: "Authentication Error", description: "Please log in to continue." });
+      return;
+    }
 
     startTransition(async () => {
       try {
@@ -66,6 +77,10 @@ export function ImageUploader() {
           const photoDataUri = reader.result as string;
           
           try {
+            const storageRef = ref(storage, `uploads/${user.uid}/${Date.now()}-${file.name}`);
+            const uploadResult = await uploadBytes(storageRef, file);
+            const downloadURL = await getDownloadURL(uploadResult.ref);
+
             const result = await analyzeCropImage({ photoDataUri });
             setAnalysisResult(result);
             
@@ -91,8 +106,9 @@ export function ImageUploader() {
               disease: diseaseText,
               date: new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD
               status: diseaseText === 'Healthy' ? 'Healthy' : 'Action Required',
-              image: photoDataUri,
+              image: downloadURL,
               data_ai_hint: `${result.cropType.toLowerCase()} plant`,
+              recommendedActions: adviceResult.recommendedActions,
             };
 
             try {
@@ -101,7 +117,6 @@ export function ImageUploader() {
               const updatedScans = [newScan, ...storedScans];
               localStorage.setItem('recentScans', JSON.stringify(updatedScans.slice(0, 20))); // Limit to 20 scans
               
-              // Dispatch a storage event to notify other components on the same page
               window.dispatchEvent(new Event('storage'));
             } catch (e) {
               console.error("Failed to save scan to localStorage", e);

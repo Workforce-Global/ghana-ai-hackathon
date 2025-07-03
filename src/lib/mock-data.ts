@@ -21,8 +21,9 @@ export const recentScansData = [
     disease: "Anthracnose",
     date: "2024-07-28",
     status: "Action Required",
-    image: "https://placehold.co/40x40.png",
-    data_ai_hint: "cashew plant disease"
+    image: "https://placehold.co/250x150.png",
+    data_ai_hint: "cashew plant disease",
+    recommendedActions: ["Apply a copper-based fungicide weekly.", "Prune and destroy infected leaves and twigs.", "Ensure proper tree spacing for better air circulation."],
   },
   {
     id: "scan-002",
@@ -30,8 +31,9 @@ export const recentScansData = [
     disease: "Mosaic Virus",
     date: "2024-07-28",
     status: "Action Required",
-    image: "https://placehold.co/40x40.png",
-    data_ai_hint: "cassava leaves"
+    image: "https://placehold.co/250x150.png",
+    data_ai_hint: "cassava leaves",
+    recommendedActions: ["Uproot and burn infected plants to prevent spread.", "Use virus-free planting materials for new crops.", "Control whitefly populations, which transmit the virus."],
   },
   {
     id: "scan-003",
@@ -39,8 +41,9 @@ export const recentScansData = [
     disease: "Healthy",
     date: "2024-07-27",
     status: "Healthy",
-    image: "https://placehold.co/40x40.png",
-    data_ai_hint: "tomato plant"
+    image: "https://placehold.co/250x150.png",
+    data_ai_hint: "tomato plant",
+    recommendedActions: [],
   },
   {
     id: "scan-004",
@@ -48,8 +51,9 @@ export const recentScansData = [
     disease: "Corn Smut",
     date: "2024-07-26",
     status: "Action Required",
-    image: "https://placehold.co/40x40.png",
-    data_ai_hint: "maize crop"
+    image: "https://placehold.co/250x150.png",
+    data_ai_hint: "maize crop",
+    recommendedActions: ["Remove and destroy smut galls before they burst.", "Avoid mechanical injury to plants during cultivation.", "Rotate crops and avoid planting maize in the same field consecutively."]
   },
   {
     id: "scan-005",
@@ -57,7 +61,8 @@ export const recentScansData = [
     disease: "Late Blight",
     date: "2024-07-25",
     status: "Action Required",
-    image: "https://placehold.co/40x40.png",
-    data_ai_hint: "tomato plant disease"
+    image: "https://placehold.co/250x150.png",
+    data_ai_hint: "tomato plant disease",
+    recommendedActions: ["Apply preventative fungicides before symptoms appear.", "Ensure good air flow around plants.", "Water at the base of the plant to keep foliage dry."]
   },
 ]

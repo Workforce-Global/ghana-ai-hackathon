@@ -22,6 +22,7 @@ export type PersonalizedAdviceInput = z.infer<typeof PersonalizedAdviceInputSche
 
 const PersonalizedAdviceOutputSchema = z.object({
   advice: z.string().describe('Personalized agricultural advice for the farmer.'),
+  recommendedActions: z.array(z.string()).describe('A list of concrete, actionable steps the farmer should take.'),
 });
 export type PersonalizedAdviceOutput = z.infer<typeof PersonalizedAdviceOutputSchema>;
 
@@ -44,6 +45,9 @@ const personalizedAdvicePrompt = ai.definePrompt({
 
   Consider all these facts when constructing your response. The advice should be clear, concise, and easy to understand.  It should also be personalized to the specific situation described. The AI model has a confidence score, so mention the confidence score in the advice. Do not make up any facts that are not present in the input. The confidence score ranges from 0 to 1.
   If the confidence score is low, be sure to mention that the diagnosis is uncertain.
+  
+  In addition to the summary advice, provide a list of 2-3 specific, actionable steps as 'recommendedActions'. For example: "Apply a copper-based fungicide weekly" or "Improve air circulation by pruning lower branches".
+
   Make sure to follow all instructions. The generated advice should be no more than 3 sentences.
   Give the farmer the most important piece of advice that you can.
   `,config: {

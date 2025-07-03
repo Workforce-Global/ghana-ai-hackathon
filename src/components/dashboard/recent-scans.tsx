@@ -10,16 +10,15 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { recentScansData as initialData } from "@/lib/mock-data"
+import { CheckCircle, AlertCircle, ShieldCheck, ListChecks } from "lucide-react"
 
 type Scan = {
   id: string;
@@ -29,6 +28,7 @@ type Scan = {
   status: string;
   image: string;
   data_ai_hint: string;
+  recommendedActions: string[];
 };
 
 export function RecentScans() {
@@ -55,65 +55,86 @@ export function RecentScans() {
   const renderContent = () => {
     if (!scans) {
       return (
-        <div className="space-y-2 p-6 pt-0">
+        <div className="space-y-2 p-6">
           <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
         </div>
       );
     }
 
     return (
-       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="hidden w-[100px] sm:table-cell">
-              <span className="sr-only">Image</span>
-            </TableHead>
-            <TableHead>Crop</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="hidden md:table-cell">Disease</TableHead>
-            <TableHead className="hidden md:table-cell">Date</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+      <Accordion type="single" collapsible className="w-full">
           {scans.length > 0 ? (
             scans.map((scan) => (
-              <TableRow key={scan.id}>
-                <TableCell className="hidden sm:table-cell">
-                  <Image
-                    alt="Crop image"
-                    className="aspect-square rounded-md object-cover"
-                    height="40"
-                    src={scan.image}
-                    width="40"
-                    data-ai-hint={scan.data_ai_hint}
-                  />
-                </TableCell>
-                <TableCell className="font-medium">{scan.cropType}</TableCell>
-                <TableCell>
-                  <Badge 
-                    variant={scan.status === "Healthy" ? "outline" : "destructive"}
-                    className={scan.status === "Healthy" ? "text-green-600 border-green-600" : ""}
-                  >
-                    {scan.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="hidden md:table-cell">{scan.disease}</TableCell>
-                <TableCell className="hidden md:table-cell">{scan.date}</TableCell>
-              </TableRow>
+              <AccordionItem value={scan.id} key={scan.id}>
+                <AccordionTrigger className="hover:no-underline px-6 py-4">
+                  <div className="flex items-center gap-4 w-full">
+                    <Image
+                      alt="Crop image"
+                      className="aspect-square rounded-md object-cover"
+                      height="40"
+                      src={scan.image}
+                      width="40"
+                      data-ai-hint={scan.data_ai_hint}
+                    />
+                    <div className="grid gap-1 text-left sm:w-1/3">
+                      <p className="font-medium">{scan.cropType}</p>
+                      <p className="text-sm text-muted-foreground">{scan.disease}</p>
+                    </div>
+                     <div className="flex-1 text-right sm:text-left">
+                       <Badge 
+                        variant={scan.status === "Healthy" ? "outline" : "destructive"}
+                        className={scan.status === "Healthy" ? "text-green-600 border-green-600" : ""}
+                      >
+                        {scan.status}
+                      </Badge>
+                    </div>
+                    <p className="hidden md:block text-sm text-muted-foreground">{scan.date}</p>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 pb-4 bg-muted/50">
+                   <div className="grid md:grid-cols-3 gap-6 pt-4">
+                      <div className="md:col-span-1">
+                         <Image
+                            alt="Crop image"
+                            className="aspect-video w-full rounded-md object-cover"
+                            height="150"
+                            src={scan.image}
+                            width="250"
+                            data-ai-hint={scan.data_ai_hint}
+                          />
+                      </div>
+                      <div className="md:col-span-2">
+                          <h4 className="font-semibold flex items-center gap-2 mb-2"><ListChecks className="w-5 h-5 text-primary" /> Recommended Actions</h4>
+                          {scan.recommendedActions.length > 0 ? (
+                            <ul className="space-y-2">
+                            {scan.recommendedActions.map((action, index) => (
+                              <li key={index} className="flex items-start gap-2 text-sm">
+                                <CheckCircle className="w-4 h-4 mt-0.5 text-primary shrink-0"/>
+                                <span>{action}</span>
+                              </li>
+                            ))}
+                          </ul>
+                          ) : (
+                             <p className="text-sm text-muted-foreground italic flex items-center gap-2">
+                               <ShieldCheck className="w-4 h-4 text-green-600" />
+                               No specific actions required, your crop looks healthy!
+                            </p>
+                          )}
+                      </div>
+                   </div>
+                </AccordionContent>
+              </AccordionItem>
             ))
           ) : (
-            <TableRow>
-              <TableCell colSpan={5} className="h-24 text-center">
+            <div className="h-24 text-center flex items-center justify-center">
                 No scans have been recorded yet.
-              </TableCell>
-            </TableRow>
+            </div>
           )}
-        </TableBody>
-      </Table>
+        </Accordion>
     )
   }
 
@@ -122,7 +143,7 @@ export function RecentScans() {
       <CardHeader>
         <CardTitle>Recent Scans</CardTitle>
         <CardDescription>
-          A log of the most recent crop analyses.
+          A log of the most recent crop analyses. Click on a scan to see details and recommended actions.
         </CardDescription>
       </CardHeader>
       <CardContent className="p-0">
