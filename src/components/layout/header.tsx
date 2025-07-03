@@ -2,7 +2,7 @@
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, LayoutDashboard, Image, Settings, Bot } from "lucide-react";
+import { Menu, LayoutDashboard, Image, Settings, Bot, Lightbulb } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -10,6 +10,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 const menuItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/analyze', label: 'Analyze Image', icon: Image },
+  { href: '/insights', label: 'Insights', icon: Lightbulb },
   { href: '/settings',label: 'Settings', icon: Settings },
 ];
 

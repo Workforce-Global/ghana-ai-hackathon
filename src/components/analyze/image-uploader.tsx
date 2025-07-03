@@ -15,6 +15,16 @@ import { analyzeCropImage, AnalyzeCropImageOutput } from '@/ai/flows/analyze-cro
 import { getPersonalizedAdvice } from '@/ai/flows/personalized-agricultural-advice';
 import { UploadCloud, Bot, Lightbulb, AlertTriangle, CheckCircle, Leaf } from 'lucide-react';
 
+type Scan = {
+  id: string;
+  cropType: string;
+  disease: string;
+  date: string;
+  status: string;
+  image: string;
+  data_ai_hint: string;
+};
+
 export function ImageUploader() {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
@@ -65,7 +75,6 @@ export function ImageUploader() {
               action: <CheckCircle className="text-green-500" />,
             });
 
-            // For now, regionalTrends is mocked. This could come from an API.
             const regionalTrends = "Increased reports of blight in the last 2 weeks.";
             const adviceResult = await getPersonalizedAdvice({
               cropType: result.cropType,
@@ -74,6 +83,30 @@ export function ImageUploader() {
               regionalTrends: regionalTrends,
             });
             setAdvice(adviceResult.advice);
+
+            const diseaseText = result.potentialDiseases.length > 0 ? result.potentialDiseases.join(', ') : 'Healthy';
+            const newScan: Scan = {
+              id: `scan-${Date.now()}`,
+              cropType: result.cropType,
+              disease: diseaseText,
+              date: new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD
+              status: diseaseText === 'Healthy' ? 'Healthy' : 'Action Required',
+              image: photoDataUri,
+              data_ai_hint: `${result.cropType.toLowerCase()} plant`,
+            };
+
+            try {
+              const storedScansRaw = localStorage.getItem('recentScans');
+              const storedScans: Scan[] = storedScansRaw ? JSON.parse(storedScansRaw) : [];
+              const updatedScans = [newScan, ...storedScans];
+              localStorage.setItem('recentScans', JSON.stringify(updatedScans.slice(0, 20))); // Limit to 20 scans
+              
+              // Dispatch a storage event to notify other components on the same page
+              window.dispatchEvent(new Event('storage'));
+            } catch (e) {
+              console.error("Failed to save scan to localStorage", e);
+            }
+
           } catch (e: any) {
              setError(e.message || "An unknown error occurred during analysis.");
              toast({

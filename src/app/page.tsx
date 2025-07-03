@@ -17,8 +17,8 @@ export default function DashboardPage() {
         />
         <StatsCard 
           title="Crops Identified"
-          value="32"
-          description="4 new types this week"
+          value="4"
+          description="Cashew, cassava, tomato, and maize."
           icon={<Leaf className="h-4 w-4 text-muted-foreground" />}
         />
         <StatsCard 

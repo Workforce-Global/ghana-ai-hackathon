@@ -21,8 +21,8 @@ export function CropChart() {
               innerRadius={60}
               strokeWidth={5}
             >
-             {cropDistributionData.map((entry) => (
-                <Cell key={`cell-${entry.name}`} fill={entry.fill} />
+             {cropDistributionData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.fill} />
               ))}
             </Pie>
           </PieChart>
