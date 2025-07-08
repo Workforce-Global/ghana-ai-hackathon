@@ -1,14 +1,18 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { AccountForm } from "@/components/settings/account-form";
+import { DataManagementForm } from "@/components/settings/data-management-form";
 
 export default function SettingsPage() {
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Manage your application preferences.</p>
+        <p className="text-muted-foreground">Manage your application and account preferences.</p>
       </div>
+
+      {/* Appearance Settings */}
       <Card>
         <CardHeader>
           <CardTitle>Appearance</CardTitle>
@@ -24,6 +28,13 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Account Settings */}
+      <AccountForm />
+
+      {/* Data Management */}
+      <DataManagementForm />
+
     </div>
   );
 }
