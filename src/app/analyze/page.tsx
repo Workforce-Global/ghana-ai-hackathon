@@ -1,4 +1,4 @@
-import { ImageUploader } from '@/components/analyze/image-uploader';
+import { AnalyzeImageClient } from '@/components/analyze/analyze-image-client';
 
 export default function AnalyzePage() {
   return (
@@ -9,7 +9,7 @@ export default function AnalyzePage() {
           Upload an image of a crop to get an AI-powered analysis and personalized advice.
         </p>
       </div>
-      <ImageUploader />
+      <AnalyzeImageClient />
     </div>
   );
 }

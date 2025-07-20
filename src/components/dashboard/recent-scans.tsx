@@ -17,47 +17,57 @@ import {
 } from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { recentScansData as initialData } from "@/lib/mock-data"
-import { CheckCircle, AlertCircle, ShieldCheck, ListChecks } from "lucide-react"
+import { getFirestore, collection, query, where, getDocs, orderBy, limit, Timestamp } from "firebase/firestore";
+import { useAuth } from "@/context/auth-provider"
+import { app } from "@/lib/firebase"
+import { BrainCircuit, Microscope, Calendar } from "lucide-react"
+import { FullAnalysisReport } from "@/ai/flows/run-full-analysis"
 
-type Scan = {
+interface ReportWithId extends FullAnalysisReport {
   id: string;
-  cropType: string;
-  disease: string;
-  date: string;
-  status: string;
-  image: string;
-  data_ai_hint: string;
-  recommendedActions: string[];
-};
+  timestamp: Timestamp;
+}
 
-export function RecentScans() {
-  const [scans, setScans] = useState<Scan[] | null>(null);
+export function RecentScans({ showAll = false }: { showAll?: boolean }) {
+  const [reports, setReports] = useState<ReportWithId[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+
+  const fetchReports = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    };
+    setLoading(true);
+    try {
+      const db = getFirestore(app);
+      const reportsRef = collection(db, "users", user.uid, "reports");
+      const q = showAll 
+        ? query(reportsRef, orderBy("timestamp", "desc"))
+        : query(reportsRef, orderBy("timestamp", "desc"), limit(5));
+      
+      const querySnapshot = await getDocs(q);
+      const fetchedReports = querySnapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as FullAnalysisReport), timestamp: doc.data().timestamp } as ReportWithId));
+      setReports(fetchedReports);
+    } catch (error) {
+      console.error("Error fetching reports from Firestore:", error);
+      setReports([]);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    // This code runs only on the client, after hydration.
-    const loadScans = () => {
-      try {
-        const storedScans = localStorage.getItem("recentScans");
-        setScans(storedScans ? JSON.parse(storedScans) : initialData);
-      } catch (error) {
-        console.error("Could not parse recent scans from localStorage", error);
-        setScans(initialData);
-      }
-    }
-    
-    loadScans();
-
-    window.addEventListener('storage', loadScans);
-    return () => window.removeEventListener('storage', loadScans);
-  }, []);
+    fetchReports();
+    // Listen for custom event to refetch reports after a new scan is completed
+    window.addEventListener('scanCompleted', fetchReports);
+    return () => window.removeEventListener('scanCompleted', fetchReports);
+  }, [user, showAll]);
 
   const renderContent = () => {
-    if (!scans) {
+    if (loading) {
       return (
         <div className="space-y-2 p-6">
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-12 w-full" />
           <Skeleton className="h-12 w-full" />
           <Skeleton className="h-12 w-full" />
           <Skeleton className="h-12 w-full" />
@@ -65,85 +75,79 @@ export function RecentScans() {
       );
     }
 
+    if (!reports || reports.length === 0) {
+      return (
+        <div className="h-24 text-center flex items-center justify-center text-muted-foreground">
+          No scans have been recorded yet.
+        </div>
+      );
+    }
+
     return (
       <Accordion type="single" collapsible className="w-full">
-          {scans.length > 0 ? (
-            scans.map((scan) => (
-              <AccordionItem value={scan.id} key={scan.id}>
-                <AccordionTrigger className="hover:no-underline px-6 py-4">
-                  <div className="flex items-center gap-4 w-full">
-                    <Image
-                      alt="Crop image"
-                      className="aspect-square rounded-md object-cover"
-                      height="40"
-                      src={scan.image}
-                      width="40"
-                      data-ai-hint={scan.data_ai_hint}
-                    />
-                    <div className="grid gap-1 text-left sm:w-1/3">
-                      <p className="font-medium">{scan.cropType}</p>
-                      <p className="text-sm text-muted-foreground">{scan.disease}</p>
-                    </div>
-                     <div className="flex-1 text-right sm:text-left">
-                       <Badge 
-                        variant={scan.status === "Healthy" ? "outline" : "destructive"}
-                        className={scan.status === "Healthy" ? "text-green-600 border-green-600" : ""}
-                      >
-                        {scan.status}
-                      </Badge>
-                    </div>
-                    <p className="hidden md:block text-sm text-muted-foreground">{scan.date}</p>
+          {reports.map((report) => (
+            <AccordionItem value={report.id} key={report.id}>
+              <AccordionTrigger className="hover:no-underline px-6 py-4">
+                <div className="flex items-center gap-4 w-full">
+                  <Image
+                    alt="Crop image"
+                    className="aspect-square rounded-md object-cover"
+                    height="40"
+                    src={report.imageUrl}
+                    width="40"
+                  />
+                  <div className="grid gap-1 text-left sm:w-1/3">
+                    <p className="font-medium">{report.prediction.label}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {(report.prediction.confidence * 100).toFixed(0)}% Confidence
+                    </p>
                   </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-6 pb-4 bg-muted/50">
-                   <div className="grid md:grid-cols-3 gap-6 pt-4">
-                      <div className="md:col-span-1">
-                         <Image
-                            alt="Crop image"
-                            className="aspect-video w-full rounded-md object-cover"
-                            height="150"
-                            src={scan.image}
-                            width="250"
-                            data-ai-hint={scan.data_ai_hint}
-                          />
-                      </div>
-                      <div className="md:col-span-2">
-                          <h4 className="font-semibold flex items-center gap-2 mb-2"><ListChecks className="w-5 h-5 text-primary" /> Recommended Actions</h4>
-                          {scan.recommendedActions.length > 0 ? (
-                            <ul className="space-y-2">
-                            {scan.recommendedActions.map((action, index) => (
-                              <li key={index} className="flex items-start gap-2 text-sm">
-                                <CheckCircle className="w-4 h-4 mt-0.5 text-primary shrink-0"/>
-                                <span>{action}</span>
-                              </li>
-                            ))}
-                          </ul>
-                          ) : (
-                             <p className="text-sm text-muted-foreground italic flex items-center gap-2">
-                               <ShieldCheck className="w-4 h-4 text-green-600" />
-                               No specific actions required, your crop looks healthy!
-                            </p>
-                          )}
-                      </div>
-                   </div>
-                </AccordionContent>
-              </AccordionItem>
-            ))
-          ) : (
-            <div className="h-24 text-center flex items-center justify-center">
-                No scans have been recorded yet.
-            </div>
-          )}
-        </Accordion>
+                   <div className="flex-1 text-right sm:text-left">
+                     <Badge 
+                      variant="outline"
+                      className="flex items-center gap-1.5"
+                    >
+                      {report.modelUsed === 'mobilenet' ? <BrainCircuit className="h-3 w-3" /> : <Microscope className="h-3 w-3" />}
+                      {report.modelUsed}
+                    </Badge>
+                  </div>
+                  <p className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
+                    <Calendar className="h-4 w-4" />
+                    {new Date(report.timestamp.seconds * 1000).toLocaleDateString()}
+                  </p>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-6 pb-4 bg-muted/50">
+                 <div className="grid md:grid-cols-3 gap-6 pt-4">
+                    <div className="md:col-span-1">
+                       <Image
+                          alt="Crop image"
+                          className="aspect-video w-full rounded-md object-cover"
+                          height="150"
+                          src={report.imageUrl}
+                          width="250"
+                        />
+                    </div>
+                    <div className="md:col-span-2 prose prose-sm dark:prose-invert text-card-foreground">
+                        <div dangerouslySetInnerHTML={{ __html: report.geminiReport }}></div>
+                    </div>
+                 </div>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+      </Accordion>
     )
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Scans</CardTitle>
+        <CardTitle>{showAll ? 'All Scans' : 'Recent Scans'}</CardTitle>
         <CardDescription>
-          A log of the most recent crop analyses. Click on a scan to see details and recommended actions.
+          {showAll 
+            ? 'A complete log of all your crop analyses.'
+            : 'The 5 most recent crop analyses. Click to see details.'
+          }
         </CardDescription>
       </CardHeader>
       <CardContent className="p-0">

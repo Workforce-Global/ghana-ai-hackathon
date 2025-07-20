@@ -7,7 +7,7 @@ export default function InsightsPage() {
             <h1 className="text-3xl font-bold">Insights</h1>
             <p className="text-muted-foreground">A log of all your crop analyses.</p>
         </div>
-        <RecentScans />
+        <RecentScans showAll={true} />
     </div>
   );
 }
