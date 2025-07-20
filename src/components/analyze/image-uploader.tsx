@@ -16,6 +16,9 @@ import { UploadCloud, Bot, Lightbulb, AlertTriangle, CheckCircle, Leaf, BrainCir
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { useAuth } from '@/context/auth-provider';
+import { generateIdToken } from '@genkit-ai/next/client';
+
 
 const formSchema = z.object({
   image: z.instanceof(FileList).refine((files) => files?.length === 1, 'Image is required.'),
@@ -30,6 +33,7 @@ export function ImageUploader() {
   const [preview, setPreview] = useState<string | null>(null);
   const [analysisReport, setAnalysisReport] = useState<FullAnalysisReport | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -50,8 +54,8 @@ export function ImageUploader() {
 
   const onSubmit = form.handleSubmit((data) => {
     const file = data.image[0];
-    if (!file) {
-      setError("Please select an image file.");
+    if (!file || !user) {
+      setError("Please select an image file and ensure you are logged in.");
       return;
     }
 
@@ -66,10 +70,15 @@ export function ImageUploader() {
           const photoDataUri = reader.result as string;
           
           try {
-            const result = await runFullAnalysis({ 
-              photoDataUri,
-              model: data.model,
-            });
+            const result = await runFullAnalysis(
+              { 
+                photoDataUri,
+                model: data.model,
+              },
+              {
+                auth: await generateIdToken(user),
+              }
+            );
             setAnalysisReport(result);
             
             toast({

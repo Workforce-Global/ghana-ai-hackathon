@@ -21,9 +21,6 @@ import { v4 as uuidv4 } from 'uuid';
 // Firebase Admin SDK Initialization
 if (!getApps().length) {
   const appOptions: AppOptions = {};
-  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    appOptions.credential = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-  }
   if (process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET) {
     appOptions.storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
   }
@@ -82,16 +79,15 @@ export const runFullAnalysis = ai.defineFlow(
     name: 'runFullAnalysisFlow',
     inputSchema: FullAnalysisInputSchema,
     outputSchema: FullAnalysisReportSchema,
-    auth: async (input, { a }) => {
-       const user = getAuth().verifyIdToken(a!);
-       if (!user) {
-         throw new Error("Authentication required.");
-       }
+    auth: (auth) => {
+      if (!auth) {
+        throw new Error('Authentication required.');
+      }
+      return auth;
     },
   },
   async (input, {auth}) => {
-    const user = await getAuth().verifyIdToken(auth!);
-    const uid = user.uid;
+    const uid = auth.uid;
     const reportId = uuidv4();
     const imagePath = `users/${uid}/scans/${reportId}/image.jpg`;
 
