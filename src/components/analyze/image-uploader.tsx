@@ -38,20 +38,17 @@ export function ImageUploader() {
     },
   });
 
-  const { register, handleSubmit, watch, setValue, formState } = form;
-  const imageFileList = watch('image');
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && e.target.files) {
       setPreview(URL.createObjectURL(file));
       setAnalysisReport(null);
       setError(null);
-      setValue('image', e.target.files, { shouldValidate: true, shouldDirty: true });
+      form.setValue('image', e.target.files, { shouldValidate: true, shouldDirty: true });
     }
   };
 
-  const onSubmit = handleSubmit((data) => {
+  const onSubmit = form.handleSubmit((data) => {
     const file = data.image[0];
     if (!file) {
       setError("Please select an image file.");
@@ -117,54 +114,65 @@ export function ImageUploader() {
           </CardHeader>
           <CardContent className="grid gap-8">
             <div className="grid w-full items-start gap-6">
-              <div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-8 flex flex-col items-center justify-center text-center hover:border-primary transition-colors">
-                  {preview ? (
-                    <Image src={preview} alt="Image preview" width={200} height={200} className="rounded-md object-cover max-h-64 w-auto" />
-                  ) : (
-                    <>
-                      <UploadCloud className="w-12 h-12 text-muted-foreground mb-4" />
-                      <h3 className="text-lg font-semibold">Click to upload or drag and drop</h3>
-                      <p className="text-sm text-muted-foreground">PNG, JPG, or WEBP (max. 10MB)</p>
-                    </>
-                  )}
-                   <Input 
-                      id="image-upload" 
-                      type="file" 
-                      accept="image/png, image/jpeg, image/webp" 
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      {...register("image")}
-                      onChange={handleFileChange}
-                   />
-              </div>
+              <FormField
+                control={form.control}
+                name="image"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-8 flex flex-col items-center justify-center text-center hover:border-primary transition-colors">
+                      {preview ? (
+                        <Image src={preview} alt="Image preview" width={200} height={200} className="rounded-md object-cover max-h-64 w-auto" />
+                      ) : (
+                        <>
+                          <UploadCloud className="w-12 h-12 text-muted-foreground mb-4" />
+                          <h3 className="text-lg font-semibold">Click to upload or drag and drop</h3>
+                          <p className="text-sm text-muted-foreground">PNG, JPG, or WEBP (max. 10MB)</p>
+                        </>
+                      )}
+                      <FormControl>
+                        <Input 
+                          id="image-upload" 
+                          type="file" 
+                          accept="image/png, image/jpeg, image/webp" 
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          onChange={handleFileChange}
+                        />
+                      </FormControl>
+                    </div>
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}
                 name="model"
                 render={({ field }) => (
                   <div className="space-y-3">
-                    <Label className="text-base">Select Analysis Model</Label>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                    >
-                      <FormItem>
-                        <Label className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
-                          <RadioGroupItem value="mobilenet" className="sr-only" />
-                          <BrainCircuit className="mb-3 h-6 w-6" />
-                          MobileNet
-                          <span className="text-xs text-muted-foreground mt-1">Faster, less accurate</span>
-                        </Label>
-                      </FormItem>
-                      <FormItem>
-                        <Label className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
-                          <RadioGroupItem value="efficientnet" className="sr-only" />
-                           <Microscope className="mb-3 h-6 w-6" />
-                          EfficientNet
-                           <span className="text-xs text-muted-foreground mt-1">Slower, more accurate</span>
-                        </Label>
-                      </FormItem>
-                    </RadioGroup>
+                    <FormLabel className="text-base">Select Analysis Model</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                      >
+                        <FormItem>
+                          <Label className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
+                            <RadioGroupItem value="mobilenet" className="sr-only" />
+                            <BrainCircuit className="mb-3 h-6 w-6" />
+                            MobileNet
+                            <span className="text-xs text-muted-foreground mt-1">Faster, less accurate</span>
+                          </Label>
+                        </FormItem>
+                        <FormItem>
+                          <Label className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
+                            <RadioGroupItem value="efficientnet" className="sr-only" />
+                            <Microscope className="mb-3 h-6 w-6" />
+                            EfficientNet
+                            <span className="text-xs text-muted-foreground mt-1">Slower, more accurate</span>
+                          </Label>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
                   </div>
                 )}
               />
@@ -227,7 +235,7 @@ export function ImageUploader() {
             )}
           </CardContent>
           <CardFooter>
-            <Button type="submit" disabled={isPending || !formState.isValid} className="w-full">
+            <Button type="submit" disabled={isPending || !form.formState.isValid} className="w-full">
               {isPending ? 'Analyzing...' : 'Analyze Crop'}
             </Button>
           </CardFooter>
