@@ -15,19 +15,19 @@ import { z } from 'genkit';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore,FieldValue } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { initializeApp, getApps, AppOptions } from 'firebase-admin/app';
 import { v4 as uuidv4 } from 'uuid';
 
 // Firebase Admin SDK Initialization
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
-  ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
-  : undefined;
-
 if (!getApps().length) {
-  initializeApp({
-    credential: cert(serviceAccount!),
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-  });
+  const appOptions: AppOptions = {};
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    appOptions.credential = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  }
+  if (process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET) {
+    appOptions.storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
+  }
+  initializeApp(appOptions);
 }
 
 
