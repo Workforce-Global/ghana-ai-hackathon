@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { runFullAnalysis, FullAnalysisReport } from '@/ai/flows/run-full-analysis';
 import { UploadCloud, Bot, Lightbulb, AlertTriangle, CheckCircle, Leaf, BrainCircuit, Microscope } from 'lucide-react';
@@ -39,21 +38,21 @@ export function ImageUploader() {
     },
   });
 
-  const { register, handleSubmit, watch, setValue } = form;
-  const imageFile = watch('image');
+  const { register, handleSubmit, watch, setValue, formState } = form;
+  const imageFileList = watch('image');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (file && e.target.files) {
       setPreview(URL.createObjectURL(file));
       setAnalysisReport(null);
       setError(null);
-      setValue('image', e.target.files as FileList);
+      setValue('image', e.target.files, { shouldValidate: true, shouldDirty: true });
     }
   };
 
   const onSubmit = handleSubmit((data) => {
-    const file = data.image?.[0];
+    const file = data.image[0];
     if (!file) {
       setError("Please select an image file.");
       return;
@@ -228,7 +227,7 @@ export function ImageUploader() {
             )}
           </CardContent>
           <CardFooter>
-            <Button type="submit" disabled={isPending || !imageFile || imageFile.length === 0} className="w-full">
+            <Button type="submit" disabled={isPending || !formState.isValid} className="w-full">
               {isPending ? 'Analyzing...' : 'Analyze Crop'}
             </Button>
           </CardFooter>
