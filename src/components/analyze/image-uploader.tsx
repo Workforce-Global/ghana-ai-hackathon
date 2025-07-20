@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useTransition } from 'react';
@@ -17,7 +18,6 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { useAuth } from '@/context/auth-provider';
-import { generateIdToken } from '@genkit-ai/next/client';
 
 
 const formSchema = z.object({
@@ -70,13 +70,14 @@ export function ImageUploader() {
           const photoDataUri = reader.result as string;
           
           try {
+            const idToken = await user.getIdToken();
             const result = await runFullAnalysis(
               { 
                 photoDataUri,
                 model: data.model,
               },
               {
-                auth: await generateIdToken(user),
+                auth: idToken,
               }
             );
             setAnalysisReport(result);
