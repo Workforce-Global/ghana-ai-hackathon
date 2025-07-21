@@ -35,4 +35,5 @@ This project is a cross-platform Tauri + Next.js application developed during th
 git clone https://github.com/Workforce-Global/ghana-ai-hackathon.git
 cd ghana-ai-hackathon
 npm install
+npx tauri dev
 ```
