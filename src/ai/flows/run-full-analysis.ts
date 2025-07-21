@@ -38,17 +38,18 @@ const FullAnalysisInputSchema = z.object({
   model: z.enum(['mobilenet', 'efficientnet']).describe('The ML model to use for inference.'),
 });
 
-const FastAPIPredictionSchema = z.object({
+export const FastAPIPredictionSchema = z.object({
   predicted_class: z.number(),
   label: z.string(),
   confidence: z.number(),
 });
 
-const FullAnalysisReportSchema = z.object({
+export const FullAnalysisReportSchema = z.object({
   imageUrl: z.string().url().describe('Public URL of the uploaded image.'),
   modelUsed: z.string().describe('The ML model that was used.'),
   prediction: FastAPIPredictionSchema,
   geminiReport: z.string().describe('The detailed, natural-language report from Gemini.'),
+  timestamp: z.any().describe('Timestamp of the analysis'),
 });
 
 export type FullAnalysisInput = z.infer<typeof FullAnalysisInputSchema>;
@@ -135,7 +136,7 @@ export const runFullAnalysis = ai.defineFlow(
     const geminiReport = geminiResponse.output!;
 
     // Step 4: Construct the final report
-    const finalReport: FullAnalysisReport & { timestamp: FieldValue } = {
+    const finalReport = {
         imageUrl,
         modelUsed: input.model,
         prediction: predictionData,
