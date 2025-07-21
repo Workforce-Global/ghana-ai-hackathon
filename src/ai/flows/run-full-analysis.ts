@@ -67,8 +67,8 @@ export const runFullAnalysis = ai.defineFlow(
       return auth;
     },
   },
-  async (input, {auth}) => {
-    const uid = auth.uid;
+  async (input, context) => {
+    const uid = context.auth.uid;
     const reportId = uuidv4();
     const imagePath = `users/${uid}/scans/${reportId}/image.jpg`;
 
