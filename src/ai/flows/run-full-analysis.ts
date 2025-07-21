@@ -11,24 +11,19 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
-import { getAuth } from 'firebase-admin/auth';
+import { z } from 'zod';
 import { getFirestore,FieldValue } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
-import { initializeApp, getApps, AppOptions } from 'firebase-admin/app';
+import { initializeApp, getApps } from 'firebase-admin/app';
 import { v4 as uuidv4 } from 'uuid';
+import { FullAnalysisReportSchema, type FullAnalysisReport } from '@/ai/schemas';
 
 // Firebase Admin SDK Initialization
 if (!getApps().length) {
-  const appOptions: AppOptions = {};
-  if (process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET) {
-    appOptions.storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
-  }
-  initializeApp(appOptions);
+  initializeApp();
 }
 
-
-// 1. Define Input and Output Schemas
+// 1. Define Input Schema
 const FullAnalysisInputSchema = z.object({
   photoDataUri: z
     .string()
@@ -38,22 +33,7 @@ const FullAnalysisInputSchema = z.object({
   model: z.enum(['mobilenet', 'efficientnet']).describe('The ML model to use for inference.'),
 });
 
-export const FastAPIPredictionSchema = z.object({
-  predicted_class: z.number(),
-  label: z.string(),
-  confidence: z.number(),
-});
-
-export const FullAnalysisReportSchema = z.object({
-  imageUrl: z.string().url().describe('Public URL of the uploaded image.'),
-  modelUsed: z.string().describe('The ML model that was used.'),
-  prediction: FastAPIPredictionSchema,
-  geminiReport: z.string().describe('The detailed, natural-language report from Gemini.'),
-  timestamp: z.any().describe('Timestamp of the analysis'),
-});
-
 export type FullAnalysisInput = z.infer<typeof FullAnalysisInputSchema>;
-export type FullAnalysisReport = z.infer<typeof FullAnalysisReportSchema>;
 
 // 2. Define supporting prompts and tools
 const geminiReportPrompt = ai.definePrompt({

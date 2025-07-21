@@ -9,9 +9,9 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
-import { FullAnalysisReport, FullAnalysisReportSchema } from './run-full-analysis';
+import { FullAnalysisReport, FullAnalysisReportSchema } from '@/ai/schemas';
 
 // 1. Define Input and Output Schemas
 const AnalyticsReportOutputSchema = z.string().describe("An HTML-formatted report summarizing the user's scan history.");

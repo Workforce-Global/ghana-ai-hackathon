@@ -17,16 +17,11 @@ import {
 } from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { getFirestore, collection, query, where, getDocs, orderBy, limit, Timestamp } from "firebase/firestore";
+import { getFirestore, collection, query, getDocs, orderBy, limit } from "firebase/firestore";
 import { useAuth } from "@/context/auth-provider"
 import { app } from "@/lib/firebase"
 import { BrainCircuit, Microscope, Calendar } from "lucide-react"
-import { FullAnalysisReport } from "@/ai/flows/run-full-analysis"
-
-interface ReportWithId extends FullAnalysisReport {
-  id: string;
-  timestamp: Timestamp;
-}
+import type { ReportWithId } from "@/ai/schemas"
 
 export function RecentScans({ showAll = false }: { showAll?: boolean }) {
   const [reports, setReports] = useState<ReportWithId[] | null>(null);
@@ -47,7 +42,7 @@ export function RecentScans({ showAll = false }: { showAll?: boolean }) {
         : query(reportsRef, orderBy("timestamp", "desc"), limit(5));
       
       const querySnapshot = await getDocs(q);
-      const fetchedReports = querySnapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as FullAnalysisReport), timestamp: doc.data().timestamp } as ReportWithId));
+      const fetchedReports = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), timestamp: doc.data().timestamp } as ReportWithId));
       setReports(fetchedReports);
     } catch (error) {
       console.error("Error fetching reports from Firestore:", error);
