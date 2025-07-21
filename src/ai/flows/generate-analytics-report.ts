@@ -53,8 +53,8 @@ export const generateAnalyticsReport = ai.defineFlow(
             return auth;
         },
     },
-    async (_, context) => {
-        const uid = context.auth.uid;
+    async (_, auth) => {
+        const uid = auth.uid;
         const db = getFirestore();
         const reportsRef = db.collection('users').doc(uid).collection('reports');
         const querySnapshot = await reportsRef.orderBy('timestamp', 'desc').get();

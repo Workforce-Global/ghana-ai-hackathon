@@ -12,7 +12,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { getFirestore,FieldValue } from 'firebase-admin/firestore';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import { initializeApp, getApps } from 'firebase-admin/app';
 import { v4 as uuidv4 } from 'uuid';
@@ -67,8 +67,8 @@ export const runFullAnalysis = ai.defineFlow(
       return auth;
     },
   },
-  async (input, context) => {
-    const uid = context.auth.uid;
+  async (input, auth) => {
+    const uid = auth.uid;
     const reportId = uuidv4();
     const imagePath = `users/${uid}/scans/${reportId}/image.jpg`;
 
