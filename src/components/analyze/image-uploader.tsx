@@ -55,8 +55,12 @@ export function ImageUploader() {
 
   const onSubmit = form.handleSubmit((data) => {
     const file = data.image[0];
-    if (!file || !user) {
-      setError("Please select an image file and ensure you are logged in.");
+    if (!file) {
+      setError("Please select an image file.");
+      return;
+    }
+    if (!user) {
+      setError("You must be logged in to perform an analysis.");
       return;
     }
 

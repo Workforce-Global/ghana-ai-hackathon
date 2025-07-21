@@ -17,7 +17,12 @@ export function AnalyticsReport() {
 
     useEffect(() => {
         const fetchReport = async () => {
-            if (!user) return;
+            if (!user) {
+                // If there's no user, we can't fetch a report.
+                // We can set loading to false and return.
+                setLoading(false);
+                return;
+            }
 
             setLoading(true);
             setError(null);
@@ -34,7 +39,16 @@ export function AnalyticsReport() {
             }
         };
 
-        fetchReport();
+        // We only want to fetch the report if the user is available.
+        if (user) {
+            fetchReport();
+        } else {
+            // Handle the case where the user is not logged in yet.
+            // For example, you might want to show a message.
+            setLoading(false);
+            // Optionally set an error or a message
+            // setError("Please log in to view your analytics report.");
+        }
     }, [user]);
 
     const renderContent = () => {
@@ -57,6 +71,15 @@ export function AnalyticsReport() {
                 </Alert>
             );
         }
+        
+        if (!user) {
+             return (
+                <div className="text-center text-muted-foreground">
+                    Please log in to view your personalized analytics.
+                </div>
+            )
+        }
+
 
         if (reportHtml) {
             return (
