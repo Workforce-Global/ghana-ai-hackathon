@@ -78,7 +78,7 @@ export function ImageUploader() {
                 model: data.model,
               },
               {
-                auth: idToken,
+                auth: { uid: user.uid, idToken }
               }
             );
             setAnalysisReport(result);
