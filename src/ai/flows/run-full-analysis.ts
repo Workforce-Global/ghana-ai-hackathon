@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -19,8 +20,8 @@ import { FullAnalysisReportSchema, type FullAnalysisReport } from '@/ai/schemas'
 import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
-  ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
+const serviceAccount = process.env.NEXT_PUBLIC_FIREBASE_ADMIN_BASE64
+  ? JSON.parse(Buffer.from(process.env.NEXT_PUBLIC_FIREBASE_ADMIN_BASE64, 'base64').toString('ascii'))
   : undefined;
 
 if (getApps().length === 0) {
