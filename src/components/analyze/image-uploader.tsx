@@ -59,8 +59,8 @@ export function ImageUploader() {
       setError("Please select an image file.");
       return;
     }
-    if (!user) {
-      setError("You must be logged in to perform an analysis.");
+    if (!user || !user.uid) {
+      setError("You must be logged in to perform an analysis. Please wait a moment for authentication to complete.");
       return;
     }
 

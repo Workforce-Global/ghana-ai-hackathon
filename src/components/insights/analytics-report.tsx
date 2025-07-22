@@ -13,13 +13,17 @@ export function AnalyticsReport() {
     const [reportHtml, setReportHtml] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
 
     useEffect(() => {
         const fetchReport = async () => {
-            if (!user) {
+            if (authLoading) {
+                // Still waiting for auth state to resolve
+                return;
+            }
+
+            if (!user || !user.uid) {
                 // If there's no user, we can't fetch a report.
-                // We can set loading to false and return.
                 setLoading(false);
                 return;
             }
@@ -39,20 +43,11 @@ export function AnalyticsReport() {
             }
         };
 
-        // We only want to fetch the report if the user is available.
-        if (user) {
-            fetchReport();
-        } else {
-            // Handle the case where the user is not logged in yet.
-            // For example, you might want to show a message.
-            setLoading(false);
-            // Optionally set an error or a message
-            // setError("Please log in to view your analytics report.");
-        }
-    }, [user]);
+        fetchReport();
+    }, [user, authLoading]);
 
     const renderContent = () => {
-        if (loading) {
+        if (loading || authLoading) {
             return (
                 <div className="space-y-4">
                     <Skeleton className="h-8 w-3/4" />
