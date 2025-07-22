@@ -75,7 +75,7 @@ export const runFullAnalysis = ai.defineFlow(
     const imagePath = `users/${uid}/scans/${reportId}/image.jpg`;
 
     // Step 1: Upload image to Firebase Storage
-    const bucket = getStorage().bucket();
+    const bucket = getStorage().bucket(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET);
     const mimeType = input.photoDataUri.match(/data:(.*);base64,/)?.[1];
     if (!mimeType) {
         throw new Error("Invalid data URI: MIME type not found.");
