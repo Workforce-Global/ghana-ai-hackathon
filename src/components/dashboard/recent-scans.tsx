@@ -1,3 +1,4 @@
+
 "use client"
 
 import Image from "next/image"
@@ -24,15 +25,15 @@ import { BrainCircuit, Microscope, Calendar } from "lucide-react"
 import type { ReportWithId } from "@/ai/schemas"
 
 export function RecentScans({ showAll = false }: { showAll?: boolean }) {
-  const [reports, setReports] = useState<ReportWithId[] | null>(null);
+  const [reports, setReports] = useState<ReportWithId[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   const fetchReports = async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    };
+    if (authLoading || !user) {
+        if (!authLoading) setLoading(false);
+        return;
+    }
     setLoading(true);
     try {
       const db = getFirestore(app);
@@ -53,14 +54,17 @@ export function RecentScans({ showAll = false }: { showAll?: boolean }) {
   }
 
   useEffect(() => {
-    fetchReports();
+    if (!authLoading) {
+        fetchReports();
+    }
     // Listen for custom event to refetch reports after a new scan is completed
-    window.addEventListener('scanCompleted', fetchReports);
-    return () => window.removeEventListener('scanCompleted', fetchReports);
-  }, [user, showAll]);
+    const handleScanCompleted = () => fetchReports();
+    window.addEventListener('scanCompleted', handleScanCompleted);
+    return () => window.removeEventListener('scanCompleted', handleScanCompleted);
+  }, [user, authLoading, showAll]);
 
   const renderContent = () => {
-    if (loading) {
+    if (loading || authLoading) {
       return (
         <div className="space-y-2 p-6">
           <Skeleton className="h-12 w-full" />
@@ -70,10 +74,18 @@ export function RecentScans({ showAll = false }: { showAll?: boolean }) {
       );
     }
 
-    if (!reports || reports.length === 0) {
+    if (!user) {
       return (
         <div className="h-24 text-center flex items-center justify-center text-muted-foreground">
-          No scans have been recorded yet.
+          Please log in to view your scan history.
+        </div>
+      );
+    }
+
+    if (reports.length === 0) {
+      return (
+        <div className="h-24 text-center flex items-center justify-center text-muted-foreground">
+          No scans have been recorded yet. Perform a new scan to see your history.
         </div>
       );
     }
@@ -108,7 +120,7 @@ export function RecentScans({ showAll = false }: { showAll?: boolean }) {
                   </div>
                   <p className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="h-4 w-4" />
-                    {new Date(report.timestamp.seconds * 1000).toLocaleDateString()}
+                    {report.timestamp ? new Date(report.timestamp.seconds * 1000).toLocaleDateString() : 'Date unavailable'}
                   </p>
                 </div>
               </AccordionTrigger>
