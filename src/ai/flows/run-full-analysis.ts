@@ -82,7 +82,9 @@ export const runFullAnalysis = ai.defineFlow(
     const imagePath = `users/${uid}/scans/${reportId}/image.jpg`;
 
     // Step 1: Upload image to Firebase Storage
-    const bucket = getStorage().bucket();
+    const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!;
+    const bucket = getStorage().bucket(bucketName);
+
     const mimeType = input.photoDataUri.match(/data:(.*);base64,/)?.[1];
     if (!mimeType) {
         throw new Error("Invalid data URI: MIME type not found.");
@@ -94,7 +96,11 @@ export const runFullAnalysis = ai.defineFlow(
     await file.save(imageBuffer, {
         metadata: { contentType: mimeType },
     });
-    const [imageUrl] = await file.getSignedUrl({ action: 'read', expires: '03-09-2491' });
+    
+    // Make the file public and construct the URL manually
+    await file.makePublic();
+    const imageUrl = `https://storage.googleapis.com/${bucket.name}/${imagePath}`;
+
 
     // Step 2: Call FastAPI for inference
     const fastApiUrl = 'https://agrosaviour-backend-947103695812.europe-west1.run.app/predict/';
