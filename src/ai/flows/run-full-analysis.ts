@@ -16,20 +16,16 @@ import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { FullAnalysisReportSchema, type FullAnalysisReport } from '@/ai/schemas';
 import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
 
 const serviceAccount = process.env.NEXT_PUBLIC_FIREBASE_ADMIN_BASE64
   ? JSON.parse(Buffer.from(process.env.NEXT_PUBLIC_FIREBASE_ADMIN_BASE64, 'base64').toString('ascii'))
   : undefined;
 
 if (getApps().length === 0) {
-  console.log('Initializing Firebase Admin SDK...');
   initializeApp({
     credential: cert(serviceAccount!),
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   });
-} else {
-  console.log('Firebase Admin SDK already initialized.');
 }
 
 
@@ -71,7 +67,7 @@ export const runFullAnalysis = ai.defineFlow(
     inputSchema: FullAnalysisInputSchema,
     outputSchema: FullAnalysisReportSchema,
     auth: (auth) => {
-      if (!auth) {
+      if (!auth || !auth.uid) {
         throw new Error('Authentication required.');
       }
       return auth;
