@@ -25,10 +25,13 @@ const serviceAccount = process.env.NEXT_PUBLIC_FIREBASE_ADMIN_BASE64
   : undefined;
 
 if (getApps().length === 0) {
+  console.log('Initializing Firebase Admin SDK...');
   initializeApp({
     credential: cert(serviceAccount!),
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   });
+} else {
+  console.log('Firebase Admin SDK already initialized.');
 }
 
 
@@ -77,13 +80,10 @@ export const runFullAnalysis = ai.defineFlow(
     },
   },
   async (input, auth) => {
+    console.log('Starting runFullAnalysisFlow...');
     const uid = auth.uid;
     const reportId = uuidv4();
     const imagePath = `users/${uid}/scans/${reportId}/image.jpg`;
-
-    // Step 1: Upload image to Firebase Storage
-    const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!;
-    const bucket = getStorage().bucket(bucketName);
 
     const mimeType = input.photoDataUri.match(/data:(.*);base64,/)?.[1];
     if (!mimeType) {
@@ -92,17 +92,8 @@ export const runFullAnalysis = ai.defineFlow(
     const base64Data = input.photoDataUri.split(',')[1];
     const imageBuffer = Buffer.from(base64Data, 'base64');
     
-    const file = bucket.file(imagePath);
-    await file.save(imageBuffer, {
-        metadata: { contentType: mimeType },
-    });
-    
-    // Make the file public and construct the URL manually
-    await file.makePublic();
-    const imageUrl = `https://storage.googleapis.com/${bucket.name}/${imagePath}`;
-
-
-    // Step 2: Call FastAPI for inference
+    // Step 1: Call FastAPI for inference
+    console.log(`Calling FastAPI endpoint for model: ${input.model}`);
     const fastApiUrl = 'https://agrosaviour-backend-947103695812.europe-west1.run.app/predict/';
     const formData = new FormData();
     formData.append('file', new Blob([imageBuffer], { type: mimeType }), 'image.jpg');
@@ -114,21 +105,39 @@ export const runFullAnalysis = ai.defineFlow(
     
     if (!fastApiResponse.ok) {
         const errorBody = await fastApiResponse.text();
+        console.error(`FastAPI request failed: ${fastApiResponse.status} - ${errorBody}`);
         throw new Error(`FastAPI request failed: ${fastApiResponse.statusText} - ${errorBody}`);
     }
+    console.log('FastAPI request successful.');
     const predictionResult = await fastApiResponse.json();
     const predictionData = {
         predicted_class: predictionResult.result.predicted_class,
         label: predictionResult.result.label,
         confidence: predictionResult.result.confidence,
     };
+    console.log('Prediction data received:', predictionData);
+
+    // Step 2: Upload image to Firebase Storage
+    console.log(`Uploading image to Firebase Storage at path: ${imagePath}`);
+    const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!;
+    const bucket = getStorage().bucket(bucketName);
+    const file = bucket.file(imagePath);
+    await file.save(imageBuffer, {
+        metadata: { contentType: mimeType },
+    });
+    
+    await file.makePublic();
+    const imageUrl = `https://storage.googleapis.com/${bucket.name}/${imagePath}`;
+    console.log(`Image uploaded successfully. Public URL: ${imageUrl}`);
     
     // Step 3: Call Gemini for the detailed report
+    console.log('Calling Gemini to generate report...');
     const geminiResponse = await geminiReportPrompt({
       modelUsed: input.model,
       prediction: predictionData,
     });
     const geminiReport = geminiResponse.output!;
+    console.log('Gemini report generated.');
 
     // Step 4: Construct the final report
     const finalReport = {
@@ -140,9 +149,11 @@ export const runFullAnalysis = ai.defineFlow(
     };
 
     // Step 5: Save the report to Firestore
+    console.log(`Saving report to Firestore for user ${uid}...`);
     const db = getFirestore();
     const reportRef = db.collection('users').doc(uid).collection('reports').doc(reportId);
     await reportRef.set(finalReport);
+    console.log('Report saved successfully to Firestore.');
     
     // Return the report (without the server timestamp object)
     return { ...finalReport, timestamp: new Date().toISOString() } as unknown as FullAnalysisReport;
