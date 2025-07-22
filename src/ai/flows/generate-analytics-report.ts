@@ -12,6 +12,19 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { FullAnalysisReport, FullAnalysisReportSchema } from '@/ai/schemas';
+import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
+
+const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
+  ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
+  : undefined;
+
+if (getApps().length === 0) {
+  initializeApp({
+    credential: cert(serviceAccount!),
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  });
+}
+
 
 // 1. Define Input and Output Schemas
 const AnalyticsReportOutputSchema = z.string().describe("An HTML-formatted report summarizing the user's scan history.");
