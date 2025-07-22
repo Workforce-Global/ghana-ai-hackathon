@@ -88,7 +88,7 @@ export const runFullAnalysis = ai.defineFlow(
     const [imageUrl] = await file.getSignedUrl({ action: 'read', expires: '03-09-2491' });
 
     // Step 2: Call FastAPI for inference
-    const fastApiUrl = 'http://127.0.0.1:8000/predict/'; // Use localhost for local dev
+    const fastApiUrl = 'https://agrosaviour-backend-947103695812.europe-west1.run.app/predict/';
     const formData = new FormData();
     formData.append('file', new Blob([imageBuffer], { type: mimeType }), 'image.jpg');
 
