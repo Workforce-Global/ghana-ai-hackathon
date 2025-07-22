@@ -4,17 +4,15 @@
 /**
  * @fileOverview Orchestrates the full analysis pipeline:
  * 1. Takes an image and model preference.
- * 2. Uploads the image to Firebase Storage.
- * 3. Calls a FastAPI endpoint for ML model inference.
- * 4. Calls Gemini to generate a detailed report from the model output.
- * 5. Saves the complete report to Firestore.
- * 6. Returns the final report.
+ * 2. Calls a FastAPI endpoint for ML model inference.
+ * 3. Calls Gemini to generate a detailed report from the model output.
+ * 4. Saves the complete report (with the image as a data URI) to Firestore.
+ * 5. Returns the final report.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import { getStorage } from 'firebase-admin/storage';
 import { v4 as uuidv4 } from 'uuid';
 import { FullAnalysisReportSchema, type FullAnalysisReport } from '@/ai/schemas';
 import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
@@ -83,7 +81,6 @@ export const runFullAnalysis = ai.defineFlow(
     console.log('Starting runFullAnalysisFlow...');
     const uid = auth.uid;
     const reportId = uuidv4();
-    const imagePath = `users/${uid}/scans/${reportId}/image.jpg`;
 
     const mimeType = input.photoDataUri.match(/data:(.*);base64,/)?.[1];
     if (!mimeType) {
@@ -117,20 +114,7 @@ export const runFullAnalysis = ai.defineFlow(
     };
     console.log('Prediction data received:', predictionData);
 
-    // Step 2: Upload image to Firebase Storage
-    console.log(`Uploading image to Firebase Storage at path: ${imagePath}`);
-    const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!;
-    const bucket = getStorage().bucket(bucketName);
-    const file = bucket.file(imagePath);
-    await file.save(imageBuffer, {
-        metadata: { contentType: mimeType },
-    });
-    
-    await file.makePublic();
-    const imageUrl = `https://storage.googleapis.com/${bucket.name}/${imagePath}`;
-    console.log(`Image uploaded successfully. Public URL: ${imageUrl}`);
-    
-    // Step 3: Call Gemini for the detailed report
+    // Step 2: Call Gemini for the detailed report
     console.log('Calling Gemini to generate report...');
     const geminiResponse = await geminiReportPrompt({
       modelUsed: input.model,
@@ -139,16 +123,16 @@ export const runFullAnalysis = ai.defineFlow(
     const geminiReport = geminiResponse.output!;
     console.log('Gemini report generated.');
 
-    // Step 4: Construct the final report
+    // Step 3: Construct the final report
     const finalReport = {
-        imageUrl,
+        imageUrl: input.photoDataUri, // Use the data URI directly
         modelUsed: input.model,
         prediction: predictionData,
         geminiReport: geminiReport,
         timestamp: FieldValue.serverTimestamp(),
     };
 
-    // Step 5: Save the report to Firestore
+    // Step 4: Save the report to Firestore
     console.log(`Saving report to Firestore for user ${uid}...`);
     const db = getFirestore();
     const reportRef = db.collection('users').doc(uid).collection('reports').doc(reportId);

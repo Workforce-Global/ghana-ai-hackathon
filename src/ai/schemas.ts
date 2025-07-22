@@ -16,7 +16,7 @@ export const FastAPIPredictionSchema = z.object({
 // Schema for the full analysis report stored in Firestore
 export const FullAnalysisReportSchema = z.object({
   id: z.string().optional(), // Optional since it's added after retrieval
-  imageUrl: z.string().url().describe('Public URL of the uploaded image.'),
+  imageUrl: z.string().describe('Data URI of the uploaded image.'),
   modelUsed: z.string().describe('The ML model that was used.'),
   prediction: FastAPIPredictionSchema,
   geminiReport: z.string().describe('The detailed, natural-language report from Gemini.'),
