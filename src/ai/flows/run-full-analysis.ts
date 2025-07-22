@@ -14,16 +14,8 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
-import { initializeApp, getApps, App } from 'firebase-admin/app';
 import { v4 as uuidv4 } from 'uuid';
 import { FullAnalysisReportSchema, type FullAnalysisReport } from '@/ai/schemas';
-
-// Firebase Admin SDK Initialization
-if (!getApps().length) {
-  initializeApp({
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  });
-}
 
 // 1. Define Input Schema
 const FullAnalysisInputSchema = z.object({
