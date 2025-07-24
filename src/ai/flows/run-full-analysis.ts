@@ -20,24 +20,29 @@ import { memoize } from 'lodash';
 
 // Memoized function to prevent re-initialization on every call
 const initializeFirebaseAdmin = memoize(() => {
-  if (getApps().length === 0) {
-    if (!process.env.NEXT_PUBLIC_FIREBASE_ADMIN_BASE64) {
-      console.error('Firebase Admin SDK service account key is missing in environment variables.');
-      throw new Error('Firebase Admin SDK not configured. Service account key is missing.');
-    }
-    const serviceAccount = JSON.parse(
-      Buffer.from(
-        process.env.NEXT_PUBLIC_FIREBASE_ADMIN_BASE64,
-        'base64'
-      ).toString('ascii')
-    );
-    initializeApp({
-      credential: cert(serviceAccount),
-      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    });
-    console.log("Firebase Admin SDK initialized.");
+  if (getApps().length > 0) {
+    return getApps()[0];
   }
-  return getApps()[0];
+  
+  if (!process.env.NEXT_PUBLIC_FIREBASE_ADMIN_BASE64) {
+    console.error('Firebase Admin SDK service account key is missing in environment variables.');
+    throw new Error('Firebase Admin SDK not configured. Service account key is missing.');
+  }
+
+  const serviceAccount = JSON.parse(
+    Buffer.from(
+      process.env.NEXT_PUBLIC_FIREBASE_ADMIN_BASE64,
+      'base64'
+    ).toString('ascii')
+  );
+
+  console.log("Initializing Firebase Admin SDK...");
+  const app = initializeApp({
+    credential: cert(serviceAccount),
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  });
+  console.log("Firebase Admin SDK initialized.");
+  return app;
 });
 
 
@@ -148,7 +153,8 @@ export const runFullAnalysis = ai.defineFlow(
 
     // Step 4: Save the report to Firestore
     console.log(`Saving report to Firestore for user ${uid}...`);
-    const db = getFirestore();
+    const app = initializeFirebaseAdmin();
+    const db = getFirestore(app);
     const reportRef = db.collection('users').doc(uid).collection('reports').doc(reportId);
     await reportRef.set(finalReport);
     console.log('Report saved successfully to Firestore.');
