@@ -257,7 +257,7 @@ export function ImageUploader() {
           </CardContent>
           <CardFooter>
             <Button type="submit" disabled={isPending || authLoading || !form.formState.isValid} className="w-full">
-              {isPending ? 'Analyzing...' : 'Analyze Crop'}
+              {isPending ? 'Analyzing...' : authLoading ? 'Authenticating...' : 'Analyze Crop'}
             </Button>
           </CardFooter>
         </form>
@@ -266,4 +266,5 @@ export function ImageUploader() {
   );
 }
 
+    
     
