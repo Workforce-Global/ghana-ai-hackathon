@@ -256,8 +256,8 @@ export function ImageUploader() {
             )}
           </CardContent>
           <CardFooter>
-            <Button type="submit" disabled={isPending || authLoading || !form.formState.isDirty} className="w-full">
-              {isPending ? 'Analyzing...' : authLoading ? 'Authenticating...' : 'Analyze Crop'}
+            <Button type="submit" disabled={isPending || authLoading || !user || !form.formState.isDirty} className="w-full">
+              {isPending ? 'Analyzing...' : authLoading ? 'Authenticating...' : !user ? 'Login Required' : 'Analyze Crop'}
             </Button>
           </CardFooter>
         </form>

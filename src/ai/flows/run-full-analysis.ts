@@ -17,14 +17,19 @@ import { v4 as uuidv4 } from 'uuid';
 import { FullAnalysisReportSchema, type FullAnalysisReport } from '@/ai/schemas';
 import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
 
-const serviceAccountString = process.env.NEXT_PUBLIC_FIREBASE_ADMIN_BASE64;
-
-if (serviceAccountString && getApps().length === 0) {
-  const serviceAccount = JSON.parse(Buffer.from(serviceAccountString, 'base64').toString('ascii'));
-  initializeApp({
-    credential: cert(serviceAccount),
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  });
+if (process.env.NEXT_PUBLIC_FIREBASE_ADMIN_BASE64) {
+  if (getApps().length === 0) {
+    const serviceAccount = JSON.parse(
+      Buffer.from(
+        process.env.NEXT_PUBLIC_FIREBASE_ADMIN_BASE64,
+        'base64'
+      ).toString('ascii')
+    );
+    initializeApp({
+      credential: cert(serviceAccount),
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    });
+  }
 }
 
 
@@ -66,7 +71,7 @@ export const runFullAnalysis = ai.defineFlow(
     inputSchema: FullAnalysisInputSchema,
     outputSchema: FullAnalysisReportSchema,
     auth: (auth) => {
-      if (!auth || !auth.uid) {
+      if (!auth) {
         throw new Error('Authentication is required to perform this action.');
       }
       if (getApps().length === 0) {

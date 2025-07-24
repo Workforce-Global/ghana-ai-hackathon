@@ -14,14 +14,19 @@ import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { FullAnalysisReport, FullAnalysisReportSchema } from '@/ai/schemas';
 import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
 
-const serviceAccountString = process.env.NEXT_PUBLIC_FIREBASE_ADMIN_BASE64;
-
-if (serviceAccountString && getApps().length === 0) {
-  const serviceAccount = JSON.parse(Buffer.from(serviceAccountString, 'base64').toString('ascii'));
-  initializeApp({
-    credential: cert(serviceAccount),
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  });
+if (process.env.NEXT_PUBLIC_FIREBASE_ADMIN_BASE64) {
+  if (getApps().length === 0) {
+    const serviceAccount = JSON.parse(
+      Buffer.from(
+        process.env.NEXT_PUBLIC_FIREBASE_ADMIN_BASE64,
+        'base64'
+      ).toString('ascii')
+    );
+    initializeApp({
+      credential: cert(serviceAccount),
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    });
+  }
 }
 
 
@@ -59,7 +64,7 @@ export const generateAnalyticsReport = ai.defineFlow(
         inputSchema: z.void(),
         outputSchema: AnalyticsReportOutputSchema,
         auth: (auth) => {
-            if (!auth || !auth.uid) {
+            if (!auth) {
                 throw new Error('Authentication is required to generate a report.');
             }
             if (getApps().length === 0) {
