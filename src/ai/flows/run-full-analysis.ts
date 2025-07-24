@@ -48,6 +48,7 @@ export type FullAnalysisInput = z.infer<typeof FullAnalysisInputSchema>;
 // 2. Define supporting prompts and tools
 const geminiReportPrompt = ai.definePrompt({
   name: 'geminiReportPrompt',
+  model: 'googleai/gemini-1.5-flash-latest',
   prompt: `Generate a diagnosis and recommended action plan for this plant disease detection result.
 Structure your response as clean HTML. Use headings (h3, h4), lists (ul, li), and paragraphs (p) to format the response. Do not include '<html>' or '<body>' tags.
 
@@ -74,7 +75,10 @@ export const runFullAnalysis = ai.defineFlow(
       if (!auth) {
         throw new Error('Authentication is required to perform this action.');
       }
-      if (getApps().length === 0) {
+      if (!auth.uid) {
+         throw new Error('FATAL: UID is missing from auth context after passing guard. This should not happen.');
+      }
+       if (getApps().length === 0) {
         throw new Error('Firebase Admin SDK not initialized. Service account key may be missing.');
       }
       return auth;
@@ -83,9 +87,7 @@ export const runFullAnalysis = ai.defineFlow(
   async (input, auth) => {
     console.log('Starting runFullAnalysisFlow...');
     const uid = auth.uid;
-    if (!uid) {
-        throw new Error('FATAL: UID is missing from auth context after passing guard. This should not happen.');
-    }
+   
     const reportId = uuidv4();
 
     const mimeType = input.photoDataUri.match(/data:(.*);base64,/)?.[1];

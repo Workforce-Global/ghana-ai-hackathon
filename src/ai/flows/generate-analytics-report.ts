@@ -36,6 +36,7 @@ const AnalyticsReportOutputSchema = z.string().describe("An HTML-formatted repor
 // 2. Define the Gemini prompt
 const analyticsPrompt = ai.definePrompt({
     name: 'analyticsPrompt',
+    model: 'googleai/gemini-1.5-flash-latest',
     input: { schema: z.array(FullAnalysisReportSchema) },
     output: { schema: AnalyticsReportOutputSchema },
     prompt: `You are an expert agricultural analyst. Your task is to analyze a user's crop scan history and provide a concise, insightful report.
@@ -67,6 +68,9 @@ export const generateAnalyticsReport = ai.defineFlow(
             if (!auth) {
                 throw new Error('Authentication is required to generate a report.');
             }
+            if (!auth.uid) {
+                throw new Error('FATAL: UID is missing from auth context after passing guard. This should not happen.');
+            }
             if (getApps().length === 0) {
               throw new Error('Firebase Admin SDK not initialized. Service account key may be missing.');
             }
@@ -75,9 +79,6 @@ export const generateAnalyticsReport = ai.defineFlow(
     },
     async (_, auth) => {
         const uid = auth.uid;
-        if (!uid) {
-            throw new Error('FATAL: UID is missing from auth context after passing guard. This should not happen.');
-        }
         const db = getFirestore();
         const reportsRef = db.collection('users').doc(uid).collection('reports');
         const querySnapshot = await reportsRef.orderBy('timestamp', 'desc').get();
