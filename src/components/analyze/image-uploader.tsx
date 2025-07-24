@@ -59,8 +59,8 @@ export function ImageUploader() {
       setError("Please select an image file.");
       return;
     }
-    // This check is now more robust, ensuring auth is not loading and user exists.
-    if (authLoading || !user || !user.uid) {
+    
+    if (authLoading || !user) {
       setError("You must be logged in to perform an analysis. Please wait a moment for authentication to complete or log in.");
       toast({
         variant: "destructive",
@@ -98,7 +98,7 @@ export function ImageUploader() {
               description: "Report has been generated and saved.",
               action: <CheckCircle className="text-green-500" />,
             });
-            // This event tells the recent scans component to refetch data from firestore
+            
             window.dispatchEvent(new Event('scanCompleted'));
 
           } catch (e: any) {
@@ -113,13 +113,19 @@ export function ImageUploader() {
         };
         reader.onerror = () => {
           setError("Could not read the selected file.");
+          toast({
+            variant: "destructive",
+            title: "File Read Error",
+            description: "Could not read the selected image file.",
+          });
         };
       } catch (e: any) {
-        setError(e.message || "An unknown error occurred.");
+        const errorMessage = e.message || "An unexpected error occurred.";
+        setError(errorMessage);
         toast({
           variant: "destructive",
           title: "Error",
-          description: e.message || "An unexpected error occurred.",
+          description: errorMessage,
         });
       }
     });
@@ -256,7 +262,7 @@ export function ImageUploader() {
             )}
           </CardContent>
           <CardFooter>
-            <Button type="submit" disabled={isPending || authLoading || !form.formState.isValid} className="w-full">
+            <Button type="submit" disabled={isPending || authLoading || !form.formState.isDirty} className="w-full">
               {isPending ? 'Analyzing...' : authLoading ? 'Authenticating...' : 'Analyze Crop'}
             </Button>
           </CardFooter>
@@ -265,6 +271,3 @@ export function ImageUploader() {
     </Card>
   );
 }
-
-    
-    

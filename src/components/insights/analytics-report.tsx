@@ -17,12 +17,11 @@ export function AnalyticsReport() {
 
     useEffect(() => {
         const fetchReport = async () => {
-            // Wait until authentication is resolved and we have a user.
             if (authLoading) {
-                return; // Still waiting for auth state...
+                return; 
             }
             if (!user) {
-                setLoading(false); // Auth is resolved, but there is no user.
+                setLoading(false);
                 return;
             }
 
