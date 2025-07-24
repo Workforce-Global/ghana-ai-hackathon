@@ -14,13 +14,12 @@ import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { FullAnalysisReport, FullAnalysisReportSchema } from '@/ai/schemas';
 import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
 
-const serviceAccount = process.env.NEXT_PUBLIC_FIREBASE_ADMIN_BASE64
-  ? JSON.parse(Buffer.from(process.env.NEXT_PUBLIC_FIREBASE_ADMIN_BASE64, 'base64').toString('ascii'))
-  : undefined;
+const serviceAccountString = process.env.NEXT_PUBLIC_FIREBASE_ADMIN_BASE64;
 
-if (getApps().length === 0) {
+if (serviceAccountString && getApps().length === 0) {
+  const serviceAccount = JSON.parse(Buffer.from(serviceAccountString, 'base64').toString('ascii'));
   initializeApp({
-    credential: cert(serviceAccount!),
+    credential: cert(serviceAccount),
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   });
 }
@@ -61,13 +60,19 @@ export const generateAnalyticsReport = ai.defineFlow(
         outputSchema: AnalyticsReportOutputSchema,
         auth: (auth) => {
             if (!auth || !auth.uid) {
-                throw new Error('Authentication required.');
+                throw new Error('Authentication is required to generate a report.');
+            }
+            if (getApps().length === 0) {
+              throw new Error('Firebase Admin SDK not initialized. Service account key may be missing.');
             }
             return auth;
         },
     },
     async (_, auth) => {
         const uid = auth.uid;
+        if (!uid) {
+            throw new Error('FATAL: UID is missing from auth context after passing guard. This should not happen.');
+        }
         const db = getFirestore();
         const reportsRef = db.collection('users').doc(uid).collection('reports');
         const querySnapshot = await reportsRef.orderBy('timestamp', 'desc').get();
