@@ -16,9 +16,15 @@ import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { FullAnalysisReportSchema, type FullAnalysisReport } from '@/ai/schemas';
 import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
+import { memoize } from 'lodash';
 
-if (process.env.NEXT_PUBLIC_FIREBASE_ADMIN_BASE64) {
+// Memoized function to prevent re-initialization on every call
+const initializeFirebaseAdmin = memoize(() => {
   if (getApps().length === 0) {
+    if (!process.env.NEXT_PUBLIC_FIREBASE_ADMIN_BASE64) {
+      console.error('Firebase Admin SDK service account key is missing in environment variables.');
+      throw new Error('Firebase Admin SDK not configured. Service account key is missing.');
+    }
     const serviceAccount = JSON.parse(
       Buffer.from(
         process.env.NEXT_PUBLIC_FIREBASE_ADMIN_BASE64,
@@ -29,8 +35,10 @@ if (process.env.NEXT_PUBLIC_FIREBASE_ADMIN_BASE64) {
       credential: cert(serviceAccount),
       storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
     });
+    console.log("Firebase Admin SDK initialized.");
   }
-}
+  return getApps()[0];
+});
 
 
 // 1. Define Input Schema
@@ -78,9 +86,7 @@ export const runFullAnalysis = ai.defineFlow(
       if (!auth.uid) {
          throw new Error('FATAL: UID is missing from auth context after passing guard. This should not happen.');
       }
-       if (getApps().length === 0) {
-        throw new Error('Firebase Admin SDK not initialized. Service account key may be missing.');
-      }
+      initializeFirebaseAdmin(); // Ensure Firebase Admin is initialized
       return auth;
     },
   },
