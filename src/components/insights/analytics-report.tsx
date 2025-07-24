@@ -17,14 +17,12 @@ export function AnalyticsReport() {
 
     useEffect(() => {
         const fetchReport = async () => {
+            // Wait until authentication is resolved and we have a user.
             if (authLoading) {
-                // Still waiting for auth state to resolve
-                return;
+                return; // Still waiting for auth state...
             }
-
-            if (!user || !user.uid) {
-                // If there's no user, we can't fetch a report.
-                setLoading(false);
+            if (!user) {
+                setLoading(false); // Auth is resolved, but there is no user.
                 return;
             }
 
@@ -105,3 +103,5 @@ export function AnalyticsReport() {
         </Card>
     );
 }
+
+    

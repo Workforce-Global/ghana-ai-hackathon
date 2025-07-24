@@ -34,7 +34,7 @@ export function ImageUploader() {
   const [preview, setPreview] = useState<string | null>(null);
   const [analysisReport, setAnalysisReport] = useState<FullAnalysisReport | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -59,8 +59,14 @@ export function ImageUploader() {
       setError("Please select an image file.");
       return;
     }
-    if (!user || !user.uid) {
-      setError("You must be logged in to perform an analysis. Please wait a moment for authentication to complete.");
+    // This check is now more robust, ensuring auth is not loading and user exists.
+    if (authLoading || !user || !user.uid) {
+      setError("You must be logged in to perform an analysis. Please wait a moment for authentication to complete or log in.");
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: "Please log in to run an analysis.",
+      });
       return;
     }
 
@@ -250,7 +256,7 @@ export function ImageUploader() {
             )}
           </CardContent>
           <CardFooter>
-            <Button type="submit" disabled={isPending || !form.formState.isValid} className="w-full">
+            <Button type="submit" disabled={isPending || authLoading || !form.formState.isValid} className="w-full">
               {isPending ? 'Analyzing...' : 'Analyze Crop'}
             </Button>
           </CardFooter>
@@ -259,3 +265,5 @@ export function ImageUploader() {
     </Card>
   );
 }
+
+    
