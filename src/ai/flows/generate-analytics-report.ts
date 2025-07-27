@@ -108,3 +108,4 @@ export const generateAnalyticsReport = ai.defineFlow(
         return output || "<p>Could not generate a report at this time.</p>";
     }
 );
+
