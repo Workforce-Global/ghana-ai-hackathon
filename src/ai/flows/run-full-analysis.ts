@@ -84,20 +84,16 @@ export const runFullAnalysis = ai.defineFlow(
     name: 'runFullAnalysisFlow',
     inputSchema: FullAnalysisInputSchema,
     outputSchema: FullAnalysisReportSchema,
-    auth: async (auth) => {
-      if (!auth) {
-        throw new Error('Authentication is required to perform this action.');
-      }
-      if (!auth.uid) {
-         throw new Error('FATAL: UID is missing from auth context after passing guard. This should not happen.');
-      }
-      await initializeFirebaseAdmin(); // Ensure Firebase Admin is initialized
-      return auth;
-    },
   },
-  async (input, auth) => {
+  async (input, { auth }) => {
     console.log('Starting runFullAnalysisFlow...');
+    
+    // Authentication and Initialization inside the flow
+    if (!auth || !auth.uid) {
+      throw new Error('Authentication is required. User UID is missing.');
+    }
     const uid = auth.uid;
+    const app = await initializeFirebaseAdmin();
    
     const reportId = uuidv4();
 
@@ -153,7 +149,6 @@ export const runFullAnalysis = ai.defineFlow(
 
     // Step 4: Save the report to Firestore
     console.log(`Saving report to Firestore for user ${uid}...`);
-    const app = await initializeFirebaseAdmin();
     const db = getFirestore(app);
     const reportRef = db.collection('users').doc(uid).collection('reports').doc(reportId);
     await reportRef.set(finalReport);

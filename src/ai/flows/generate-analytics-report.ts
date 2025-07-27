@@ -77,20 +77,15 @@ export const generateAnalyticsReport = ai.defineFlow(
         name: 'generateAnalyticsReportFlow',
         inputSchema: z.void(),
         outputSchema: AnalyticsReportOutputSchema,
-        auth: async (auth) => {
-            if (!auth) {
-                throw new Error('Authentication is required to generate a report.');
-            }
-            if (!auth.uid) {
-                throw new Error('FATAL: UID is missing from auth context after passing guard. This should not happen.');
-            }
-            await initializeFirebaseAdmin(); // Ensure Firebase Admin is initialized
-            return auth;
-        },
     },
-    async (_, auth) => {
+    async (_, { auth }) => {
+        // Authentication and Initialization inside the flow
+        if (!auth || !auth.uid) {
+            throw new Error('Authentication is required. User UID is missing.');
+        }
         const uid = auth.uid;
         const app = await initializeFirebaseAdmin();
+        
         const db = getFirestore(app);
         const reportsRef = db.collection('users').doc(uid).collection('reports');
         const querySnapshot = await reportsRef.orderBy('timestamp', 'desc').get();
