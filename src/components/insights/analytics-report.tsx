@@ -27,7 +27,13 @@ export function AnalyticsReport() {
         setReportHtml(null);
         
         try {
-            const result = await generateAnalyticsReport();
+            const idToken = await user.getIdToken();
+            const result = await generateAnalyticsReport(undefined, {
+                auth: {
+                    uid: user.uid,
+                    idToken
+                }
+            });
             setReportHtml(result);
         } catch (e: any) {
             const errorMessage = e.message || "An unknown error occurred while generating the report.";

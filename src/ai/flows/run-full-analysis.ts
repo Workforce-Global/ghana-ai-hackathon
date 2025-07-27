@@ -84,13 +84,23 @@ export const runFullAnalysis = ai.defineFlow(
     name: 'runFullAnalysisFlow',
     inputSchema: FullAnalysisInputSchema,
     outputSchema: FullAnalysisReportSchema,
+    auth: async (auth) => {
+      if (!auth) {
+        throw new Error('Authentication is required.');
+      }
+      if (!auth.uid) {
+        throw new Error('Authentication is required. User UID is missing.');
+      }
+    },
   },
   async (input, { auth }) => {
     console.log('Starting runFullAnalysisFlow...');
     
     // Authentication and Initialization inside the flow
     if (!auth || !auth.uid) {
-      throw new Error('Authentication is required. User UID is missing.');
+      // This check is redundant due to the auth guard, but provides strong typing
+      // and a fallback for non-Next.js environments.
+      throw new Error('FATAL: UID is missing from auth context after passing guard. This should not happen.');
     }
     const uid = auth.uid;
     const app = await initializeFirebaseAdmin();

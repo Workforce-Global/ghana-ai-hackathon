@@ -81,10 +81,19 @@ export function ImageUploader() {
           const photoDataUri = reader.result as string;
           
           try {
-            const result = await runFullAnalysis({ 
+            const idToken = await user.getIdToken();
+            const result = await runFullAnalysis(
+              { 
                 photoDataUri,
                 model: data.model,
-            });
+              },
+              {
+                auth: {
+                  uid: user.uid,
+                  idToken
+                }
+              }
+            );
             setAnalysisReport(result);
             
             toast({
