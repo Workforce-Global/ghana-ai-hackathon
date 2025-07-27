@@ -19,9 +19,9 @@ import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
 import { memoize } from 'lodash';
 
 // Memoized function to prevent re-initialization on every call
-const initializeFirebaseAdmin = memoize(() => {
+const initializeFirebaseAdmin = memoize(async (): Promise<App> => {
   if (getApps().length > 0) {
-    return getApps()[0];
+    return getApps()[0]!;
   }
   
   if (!process.env.NEXT_PUBLIC_FIREBASE_ADMIN_BASE64) {
@@ -84,14 +84,14 @@ export const runFullAnalysis = ai.defineFlow(
     name: 'runFullAnalysisFlow',
     inputSchema: FullAnalysisInputSchema,
     outputSchema: FullAnalysisReportSchema,
-    auth: (auth) => {
+    auth: async (auth) => {
       if (!auth) {
         throw new Error('Authentication is required to perform this action.');
       }
       if (!auth.uid) {
          throw new Error('FATAL: UID is missing from auth context after passing guard. This should not happen.');
       }
-      initializeFirebaseAdmin(); // Ensure Firebase Admin is initialized
+      await initializeFirebaseAdmin(); // Ensure Firebase Admin is initialized
       return auth;
     },
   },
@@ -153,7 +153,7 @@ export const runFullAnalysis = ai.defineFlow(
 
     // Step 4: Save the report to Firestore
     console.log(`Saving report to Firestore for user ${uid}...`);
-    const app = initializeFirebaseAdmin();
+    const app = await initializeFirebaseAdmin();
     const db = getFirestore(app);
     const reportRef = db.collection('users').doc(uid).collection('reports').doc(reportId);
     await reportRef.set(finalReport);

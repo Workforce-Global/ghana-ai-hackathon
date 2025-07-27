@@ -16,9 +16,9 @@ import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
 import { memoize } from 'lodash';
 
 // Memoized function to prevent re-initialization on every call
-const initializeFirebaseAdmin = memoize(() => {
+const initializeFirebaseAdmin = memoize(async (): Promise<App> => {
   if (getApps().length > 0) {
-    return getApps()[0];
+    return getApps()[0]!;
   }
   
   if (!process.env.NEXT_PUBLIC_FIREBASE_ADMIN_BASE64) {
@@ -77,20 +77,20 @@ export const generateAnalyticsReport = ai.defineFlow(
         name: 'generateAnalyticsReportFlow',
         inputSchema: z.void(),
         outputSchema: AnalyticsReportOutputSchema,
-        auth: (auth) => {
+        auth: async (auth) => {
             if (!auth) {
                 throw new Error('Authentication is required to generate a report.');
             }
             if (!auth.uid) {
                 throw new Error('FATAL: UID is missing from auth context after passing guard. This should not happen.');
             }
-            initializeFirebaseAdmin(); // Ensure Firebase Admin is initialized
+            await initializeFirebaseAdmin(); // Ensure Firebase Admin is initialized
             return auth;
         },
     },
     async (_, auth) => {
         const uid = auth.uid;
-        const app = initializeFirebaseAdmin();
+        const app = await initializeFirebaseAdmin();
         const db = getFirestore(app);
         const reportsRef = db.collection('users').doc(uid).collection('reports');
         const querySnapshot = await reportsRef.orderBy('timestamp', 'desc').get();
