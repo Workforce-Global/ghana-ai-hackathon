@@ -39,7 +39,7 @@ export function ImageUploader() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      model: 'mobilenet',
+      model: 'efficnet',
     },
   });
 
