@@ -39,7 +39,7 @@ export function ImageUploader() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      model: 'efficnet',
+      model: 'efficientnet',
     },
   });
 
@@ -84,10 +84,6 @@ export function ImageUploader() {
             const result = await runFullAnalysis({
               photoDataUri,
               model: data.model,
-            }, {
-              auth: {
-                uid: user.uid,
-              },
             });            
             setAnalysisReport(result);
             

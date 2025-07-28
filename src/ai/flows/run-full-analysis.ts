@@ -84,7 +84,7 @@ export const runFullAnalysis = ai.defineFlow(
     name: 'runFullAnalysisFlow',
     inputSchema: FullAnalysisInputSchema,
     outputSchema: FullAnalysisReportSchema,
-    auth: async (auth) => {
+    auth: (auth) => {
       if (!auth) {
         throw new Error('Authentication is required.');
       }

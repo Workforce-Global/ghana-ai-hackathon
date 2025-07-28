@@ -77,7 +77,7 @@ export const generateAnalyticsReport = ai.defineFlow(
         name: 'generateAnalyticsReportFlow',
         inputSchema: z.void(),
         outputSchema: AnalyticsReportOutputSchema,
-        auth: async (auth) => {
+        auth: (auth) => {
             if (!auth) {
                 throw new Error('Authentication is required.');
             }
