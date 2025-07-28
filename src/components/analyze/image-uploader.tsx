@@ -84,7 +84,11 @@ export function ImageUploader() {
             const result = await runFullAnalysis({
               photoDataUri,
               model: data.model,
-            });
+            }, {
+              auth: {
+                uid: user.uid,
+              },
+            });            
             setAnalysisReport(result);
             
             toast({
