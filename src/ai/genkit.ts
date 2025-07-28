@@ -1,7 +1,7 @@
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 import { next } from '@genkit-ai/next';
-import { firebase } from '@genkit-ai/firebase';
+import { firebaseAuth } from '@genkit-ai/firebase/auth';
 
 export const ai = genkit({
   plugins: [
@@ -10,7 +10,7 @@ export const ai = genkit({
       // Use the Firebase plugin to handle authentication.
       // The Genkit Next.js plugin will automatically use the Firebase
       // client-side auth state to authenticate requests to flows.
-      auth: firebase(),
+      auth: firebaseAuth(),
     }),
   ],
   // Log developer-friendly errors
