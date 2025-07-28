@@ -1,7 +1,7 @@
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 import { next } from '@genkit-ai/next';
-import { firebaseAuth } from '@genkit-ai/firebase/auth';
+import { firebaseAuth } from '@genkit-ai/firebase';
 
 export const ai = genkit({
   plugins: [
