@@ -15,35 +15,7 @@ import { z } from 'zod';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { FullAnalysisReportSchema, type FullAnalysisReport } from '@/ai/schemas';
-import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
-import { memoize } from 'lodash';
-
-// Memoized function to prevent re-initialization on every call
-const initializeFirebaseAdmin = memoize(async (): Promise<App> => {
-  if (getApps().length > 0) {
-    return getApps()[0]!;
-  }
-  
-  if (!process.env.NEXT_PUBLIC_FIREBASE_ADMIN_BASE64) {
-    console.error('Firebase Admin SDK service account key is missing in environment variables.');
-    throw new Error('Firebase Admin SDK not configured. Service account key is missing.');
-  }
-
-  const serviceAccount = JSON.parse(
-    Buffer.from(
-      process.env.NEXT_PUBLIC_FIREBASE_ADMIN_BASE64,
-      'base64'
-    ).toString('ascii')
-  );
-
-  console.log("Initializing Firebase Admin SDK...");
-  const app = initializeApp({
-    credential: cert(serviceAccount),
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  });
-  console.log("Firebase Admin SDK initialized.");
-  return app;
-});
+import { initializeFirebaseAdmin } from '@/lib/firebase-admin';
 
 
 // 1. Define Input Schema
@@ -96,14 +68,11 @@ export const runFullAnalysis = ai.defineFlow(
   async (input, { auth }) => {
     console.log('Starting runFullAnalysisFlow...');
     
-    // Authentication and Initialization inside the flow
     if (!auth || !auth.uid) {
-      // This check is redundant due to the auth guard, but provides strong typing
-      // and a fallback for non-Next.js environments.
       throw new Error('FATAL: UID is missing from auth context after passing guard. This should not happen.');
     }
     const uid = auth.uid;
-    const app = await initializeFirebaseAdmin();
+    const app = initializeFirebaseAdmin();
    
     const reportId = uuidv4();
 
