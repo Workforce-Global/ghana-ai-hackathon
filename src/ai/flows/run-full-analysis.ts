@@ -16,6 +16,12 @@ import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { FullAnalysisReportSchema, type FullAnalysisReport } from '@/ai/schemas';
 import { initializeFirebaseAdmin } from '@/lib/firebase-admin';
+import { getAuth } from 'firebase-admin/auth';
+import type { FlowRunOptions } from '@genkit-ai/core';
+
+type context = {
+  raw?: { headers?: Record<string, string> }
+};
 
 
 // 1. Define Input Schema
@@ -56,23 +62,38 @@ export const runFullAnalysis = ai.defineFlow(
     name: 'runFullAnalysisFlow',
     inputSchema: FullAnalysisInputSchema,
     outputSchema: FullAnalysisReportSchema,
-    auth: (auth) => {
-      if (!auth) {
-        throw new Error('Authentication is required.');
-      }
-      if (!auth.uid) {
-        throw new Error('Authentication is required. User UID is missing.');
-      }
-    },
+    // auth: (auth) => {
+    //   if (!auth) {
+    //     throw new Error('Authentication is required.');
+    //   }
+    //   if (!auth.uid) {
+    //     throw new Error('Authentication is required. User UID is missing.');
+    //   }
+    // },
   },
-  async (input, { auth }) => {
+  async (input, context) => {
     console.log('Starting runFullAnalysisFlow...');
+      const idToken = context.raw?.headers?.authorization?.split('Bearer ')[1];
+      if (!idToken) {
+        throw new Error("Missing Firebase ID token in Authorization header.");
+      }
     
-    if (!auth || !auth.uid) {
-      throw new Error('FATAL: UID is missing from auth context after passing guard. This should not happen.');
-    }
-    const uid = auth.uid;
-    const app = initializeFirebaseAdmin();
+      const app = initializeFirebaseAdmin();
+      const auth = getAuth(app);
+      let decodedToken;
+    
+      try {
+        decodedToken = await auth.verifyIdToken(idToken);
+      } catch (error) {
+        throw new Error("Invalid Firebase ID token.");
+      }
+      const uid = decodedToken.uid;
+    
+    // if (!auth || !auth.uid) {
+    //   throw new Error('FATAL: UID is missing from auth context after passing guard. This should not happen.');
+    // }
+    // const uid = auth.uid;
+    // const app = initializeFirebaseAdmin();
    
     const reportId = uuidv4();
 

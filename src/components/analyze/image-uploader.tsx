@@ -19,6 +19,8 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { useAuth } from '@/context/auth-provider';
+import { runFullAnalysisServer } from '@/app/actions/run-full-analysis-server';
+
 
 
 const formSchema = z.object({
@@ -81,10 +83,12 @@ export function ImageUploader() {
           const photoDataUri = reader.result as string;
           
           try {
-            const result = await runFullAnalysis({
+            const token = await user.getIdToken(); // Firebase user is available in useAuth
+            const result = await runFullAnalysisServer({
               photoDataUri,
               model: data.model,
-            });            
+              token, // pass token separately
+            });    
             setAnalysisReport(result);
             
             toast({
