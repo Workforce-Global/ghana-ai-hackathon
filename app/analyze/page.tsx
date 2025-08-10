@@ -28,6 +28,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 
 interface AnalysisResult {
   label: string;
@@ -58,10 +59,10 @@ export default function AnalyzePage() {
 
     setAnalyzing(true);
     try {
-      // Get disease prediction
+      const imageUrl = await uploadToCloudinary(selectedImage);
+
       const prediction = await predictDisease(selectedImage);
 
-      // Generate AI recommendations
       const recommendations = await getDiseaseRecommendationServer(
         prediction.result.label,
         prediction.result.confidence
@@ -76,7 +77,7 @@ export default function AnalyzePage() {
 
       setResult(analysisResult);
 
-      // Save to Firestore with dynamic import
+      // 4. Save to Firestore with imageUrl
       const { Timestamp } = await import("firebase/firestore");
       await saveScanResult({
         userId: user.uid,
@@ -84,6 +85,7 @@ export default function AnalyzePage() {
         confidence: analysisResult.confidence,
         modelUsed: analysisResult.modelUsed,
         recommendations: analysisResult.recommendations,
+        imageUrl,
         timestamp: Timestamp.now(),
       });
 
